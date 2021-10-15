@@ -11,6 +11,8 @@ ACCESS_TOKEN = environ["TWITTER_ACCESS_KEY"]
 ACCESS_SECRET = environ["TWITTER_ACCESS_SECRET"]
 
 def rate_tweet(tweet):
+    if "sigma" in tweet.text.lower():
+        return "grindset tweet"
     rating = random()
     if rating < 0.01:
         return "cringe tweet"
