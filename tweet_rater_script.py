@@ -26,9 +26,14 @@ def main():
     while True:
         try:
             api = twitter.Api(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET, True)
-            results = api.GetSearch(
-            raw_query="q=(from%3Acoopermeitz)%20-filter%3Areplies", 
-            count = 5)
+            results = None
+            if last_tweet != None:
+                results = api.GetSearch(
+                raw_query="q=(from%3Acoopermeitz)%20-filter%3Areplies")
+            else:
+                results = api.GetSearch(
+                raw_query="q=(from%3Acoopermeitz)%20-filter%3Areplies", 
+                since_id = last_tweet)
             print([t.text for t in results])
             tweets_to_rate = []
 
@@ -40,12 +45,16 @@ def main():
                 continue
 
             #find all the newest tweets in an overly complicated way
+            unchanged = True
             for tweet in results:
                 if tweet.id == last_tweet:
                     last_tweet = tweet.id
+                    unchanged = False
                     break
                 if "RT @" not in tweet.text:
                     tweets_to_rate.append(tweet)
+            if len(tweets_to_rate) > 0 and unchanged:
+                last_tweet = tweets_to_rate[0].id
             
             print(last_tweet, tweets_to_rate)
 
