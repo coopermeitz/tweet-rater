@@ -5,6 +5,7 @@ It runs on an Amazon EC2 instance in the cloud.
 
 If you want to make it rate smartly, create an issue or a pull request.
 
+If you want to make me happy, follow me on Twitter, [@coopermeitz](https://twitter.com/coopermeitz).
 ## How it works
 #### Script
 I got access to the Twitter API's from the [Twitter for Developers](https://developer.twitter.com/en) website. This site gives credentials for the app to run, and for the app to tweet on my behalf.
