@@ -143,8 +143,6 @@ def main():
                 raw_query="q=(from%3Acoopermeitz)%20-filter%3Areplies"
             )
             print([t.id for t in results])
-            for tweet in results:
-                print(tweet.text, rate_tweet(tweet))
 
             if last_tweet == None:
                 last_tweet = results[0].id
