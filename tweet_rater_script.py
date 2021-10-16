@@ -47,7 +47,7 @@ def is_aggressive(tweet):
 
 
 def is_extremely_negative(tweet):
-    """Checks to see if the bot should be kina tilted because I
+    """Checks to see if the bot should be kinda tilted because I
     tweeted something negative. Uses textblob for sentiment analysis.
     Positive vibes only!
 
@@ -104,16 +104,9 @@ def main():
     while True:
         try:
             api = twitter.Api(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET, True)
-            results = None
-            if last_tweet != None:
-                results = api.GetSearch(
-                    raw_query="q=(from%3Acoopermeitz)%20-filter%3Areplies"
-                )
-            else:
-                results = api.GetSearch(
-                    raw_query="q=(from%3Acoopermeitz)%20-filter%3Areplies",
-                    since_id=last_tweet,
-                )
+            results = api.GetSearch(
+                raw_query="q=(from%3Acoopermeitz)%20-filter%3Areplies"
+            )
             print([t.text for t in results])
             tweets_to_rate = []
 
