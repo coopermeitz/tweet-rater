@@ -188,6 +188,7 @@ def main():
         except Exception as e:
             if LINUX:
                 syslog.syslog("restarting due to " + str(e))
+            print("restarting due to " + str(e))
             if "rate" in str(e).lower():
                 sleep(15 * 60)
             else:
