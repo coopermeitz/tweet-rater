@@ -139,7 +139,7 @@ def main():
                 if LINUX:
                     syslog.syslog("tweeted reply to " + str(tweet.text))
             if len(tweets_to_rate) > 0:
-                last_tweet = tweets_to_rate[0].text
+                last_tweet = tweets_to_rate[0].id
             sleep(90)
         except Exception as e:
             if LINUX:
