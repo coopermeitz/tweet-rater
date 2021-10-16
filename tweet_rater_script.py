@@ -5,10 +5,12 @@ from random import random
 from os import environ
 from time import sleep
 from sys import platform
+from datetime import datetime
 
-# NLP libraries.
+# NLP and grammar libraries.
 from textblob import TextBlob
 import nltk
+from language_tool_python import LanguageTool
 
 # Checks if the OS is Linux to determine if syslog can be used.
 LINUX = "linux" in platform.lower()
@@ -46,7 +48,7 @@ def is_aggressive(tweet):
     return tweet.text.isupper()
 
 
-def is_extremely_negative(tweet):
+def sentiment_rating(tweet):
     """Checks to see if the bot should be kinda tilted because I
     tweeted something negative. Uses textblob for sentiment analysis.
     Positive vibes only!
@@ -66,8 +68,21 @@ def is_extremely_negative(tweet):
         avg_polarity /= n
         avg_subjectivity /= n
     else:
-        return False
-    return avg_polarity < -0.25
+        return 0, 0
+    return avg_polarity, avg_subjectivity
+
+def correct_your(tweet):
+    """Checks that the tweet uses the correct form you your/you're.
+
+    :param tweet: Tweet sent by me.
+    :type tweet: twitter.Status
+    :return: Boolean describing if this tweet uses the correct form of your/you're. Will return
+    True if neither word was used.
+    :rtype: bool
+    """
+    tool = LanguageTool(language='en-US')
+    errors = tool.check(tweet.text)
+    return all(match.ruleId != 'YOUR_YOU_RE' for match in errors)
 
 
 # Tweet rating function.
@@ -80,35 +95,56 @@ def rate_tweet(tweet):
     :return: String that gives the rating of the tweet.
     :rtype: str
     """
+    if not correct_your(tweet): # Just hammer me for using bad grammar.
+        return "one-of-you're-worst tweet"
     if is_sigma(tweet):  # Most importantly, check if this tweet is a SIGMA tweet.
         return "grindset tweet"
-    if is_aggressive(tweet):
+    if is_aggressive(tweet): # Calm the crowd down after my aggression.
         return "needs-bob-ross tweet"
-    if is_extremely_negative(tweet):
+    polarity, subjectivity = sentiment_rating(tweet)
+    if polarity == 0:
+        # Just return something at random, since I've run out of ideas to look for.
+        rating = random()
+        if rating < 0.01:
+            return "cringe tweet"
+        elif rating < 0.5:
+            return "average tweet"
+        elif rating < 0.99:
+            return "good tweet"
+        else:
+            return "based tweet"
+    elif polarity > 0.5 and subjectivity > 0.5:
+        return "probably a simp tweet"
+    elif polarity > 0.5 and subjectivity <= 0.5:
+        return "kinda wholesome tweet"
+    elif -0.25 < polarity < 0:
+        return "passive aggressive tweet"
+    elif polarity < -0.25:
         return "more-negative-than-an-electron tweet"
-
-    # Just return something at random, since I've run out of ideas to look for.
-    rating = random()
-    if rating < 0.01:
-        return "cringe tweet"
-    elif rating < 0.5:
-        return "average tweet"
-    elif rating < 0.99:
-        return "good tweet"
     else:
-        return "based tweet"
+        return "not sure how to rate this tweet"
+
+
 
 
 def main():
     last_tweet = None
     while True:
         try:
-            api = twitter.Api(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET, True)
+            start = datetime.now()
+            api = twitter.Api(
+                API_KEY,
+                API_SECRET,
+                ACCESS_TOKEN,
+                ACCESS_SECRET,
+                application_only_auth=True,
+            )
             results = api.GetSearch(
                 raw_query="q=(from%3Acoopermeitz)%20-filter%3Areplies"
             )
-            print([t.text for t in results])
-            tweets_to_rate = []
+            print([t.id for t in results])
+            for tweet in results:
+                print(tweet.text, rate_tweet(tweet))
 
             if last_tweet == None:
                 last_tweet = results[0].id
@@ -116,22 +152,26 @@ def main():
                 sleep(10)
                 continue
 
-            # find all the newest tweets in an overly complicated way
-            unchanged = True
-            for tweet in results:
-                if tweet.id == last_tweet:
-                    last_tweet = tweet.id
-                    unchanged = False
-                    break
-                if "RT @" not in tweet.text:
-                    tweets_to_rate.append(tweet)
-            if len(tweets_to_rate) > 0 and unchanged:
+            # Get non-retweet tweets that are newer than the last one checked.
+            tweets_to_rate = [
+                tweet
+                for tweet in results
+                if "RT @" not in tweet.text and tweet.id > last_tweet
+            ]
+
+            if len(tweets_to_rate) > 0:
                 last_tweet = tweets_to_rate[0].id
 
             print(last_tweet, tweets_to_rate)
 
-            # tweet the rating to all unrated tweets
-            api = twitter.Api(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET, False)
+            # Tweet the rating to all unrated tweets.
+            api = twitter.Api(
+                API_KEY,
+                API_SECRET,
+                ACCESS_TOKEN,
+                ACCESS_SECRET,
+                application_only_auth=False,
+            )
             for tweet in tweets_to_rate:
                 rating = rate_tweet(tweet)
                 print(rating)
@@ -140,7 +180,11 @@ def main():
                     syslog.syslog("tweeted reply to " + str(tweet.text))
             if len(tweets_to_rate) > 0:
                 last_tweet = tweets_to_rate[0].id
-            sleep(90)
+            end = datetime.now()
+            seconds_taken = (end - start).total_seconds()
+            if seconds_taken < 90:
+                # Sleep so this cycle takes exactly 90 seconds total.
+                sleep(90 - seconds_taken)
         except Exception as e:
             if LINUX:
                 syslog.syslog("restarting due to " + str(e))
