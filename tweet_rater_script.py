@@ -71,6 +71,7 @@ def sentiment_rating(tweet):
         return 0, 0
     return avg_polarity, avg_subjectivity
 
+
 def correct_your(tweet):
     """Checks that the tweet uses the correct form you your/you're.
 
@@ -80,9 +81,11 @@ def correct_your(tweet):
     True if neither word was used.
     :rtype: bool
     """
-    tool = LanguageTool(language='en-US')
+    tool = LanguageTool(language="en-US")
     errors = tool.check(tweet.text)
-    return all(match.ruleId != 'YOUR_YOU_RE' for match in errors)
+    return not any(
+        "YOUR" in match.ruleId or "YOU'RE" in match.ruleId for match in errors
+    )
 
 
 # Tweet rating function.
@@ -95,11 +98,11 @@ def rate_tweet(tweet):
     :return: String that gives the rating of the tweet.
     :rtype: str
     """
-    if not correct_your(tweet): # Just hammer me for using bad grammar.
+    if not correct_your(tweet):  # Just hammer me for using bad grammar.
         return "one-of-you're-worst tweet"
     if is_sigma(tweet):  # Most importantly, check if this tweet is a SIGMA tweet.
         return "grindset tweet"
-    if is_aggressive(tweet): # Calm the crowd down after my aggression.
+    if is_aggressive(tweet):  # Calm the crowd down after my aggression.
         return "needs-bob-ross tweet"
     polarity, subjectivity = sentiment_rating(tweet)
     if polarity == 0:
@@ -123,8 +126,6 @@ def rate_tweet(tweet):
         return "more-negative-than-an-electron tweet"
     else:
         return "not sure how to rate this tweet"
-
-
 
 
 def main():
