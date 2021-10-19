@@ -128,6 +128,19 @@ def rate_tweet(tweet):
         return "not sure how to rate this tweet"
 
 
+def debug_tweet(error):
+    text = "restarting due to " + str(error)
+    api = twitter.Api(
+        API_KEY,
+        API_SECRET,
+        ACCESS_TOKEN,
+        ACCESS_SECRET,
+        application_only_auth=False,
+    )
+    reply = "1338657164437688323"
+    api.PostUpdate(text, in_reply_to_status_id=reply)
+
+
 def main():
     last_tweet = None
     while True:
@@ -143,7 +156,7 @@ def main():
             results = api.GetSearch(
                 raw_query="q=(from%3Acoopermeitz)%20-filter%3Areplies"
             )
-            print([t.id for t in results])
+            print("Found", [t.text for t in results])
 
             if last_tweet == None:
                 last_tweet = results[0].id
@@ -157,11 +170,12 @@ def main():
                 for tweet in results
                 if "RT @" not in tweet.text and tweet.id > last_tweet
             ]
+            print("Rating", [t.text for t in tweets_to_rate])
 
             if len(tweets_to_rate) > 0:
                 last_tweet = tweets_to_rate[0].id
 
-            print(last_tweet, tweets_to_rate)
+            print(last_tweet)
 
             # Tweet the rating to all unrated tweets.
             api = twitter.Api(
@@ -177,14 +191,15 @@ def main():
                 api.PostUpdate(rating, in_reply_to_status_id=tweet.id)
                 if LINUX:
                     syslog.syslog("tweeted reply to " + str(tweet.text))
-            if len(tweets_to_rate) > 0:
-                last_tweet = tweets_to_rate[0].id
             end = datetime.now()
             seconds_taken = (end - start).total_seconds()
             if seconds_taken < 90:
-                # Sleep so this cycle takes exactly 90 seconds total.
+                # Sleep so this cycle takes at least 90 seconds total.
                 sleep(90 - seconds_taken)
+            last_tweet = results[0].id
+            print(datetime.now())
         except Exception as e:
+            debug_tweet(e)
             if LINUX:
                 syslog.syslog("restarting due to " + str(e))
             print("restarting due to " + str(e))
