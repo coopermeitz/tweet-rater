@@ -31,7 +31,9 @@ def emotion(tweet):
     for emotion, score in stuff.items():
         if max_emotion == None or score > max_score:
             max_emotion, max_score = emotion, score
-    return max_emotion + " tweet"
+    return "%s tweet" % (
+        max_emotion if type(max_emotion) == str else "ambiguous"
+    )
 
 # Helper functions used for the rating algorithm.
 def is_sigma(tweet):
