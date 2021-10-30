@@ -1,4 +1,5 @@
-language-tool-python
+
 nltk
 python-twitter
 textblob
+text2emotion

@@ -10,7 +10,8 @@ from datetime import datetime
 # NLP and grammar libraries.
 from textblob import TextBlob
 import nltk
-from language_tool_python import LanguageTool
+# from language_tool_python import LanguageTool
+import text2emotion as te
 
 # Checks if the OS is Linux to determine if syslog can be used.
 LINUX = "linux" in platform.lower()
@@ -22,6 +23,15 @@ API_KEY = environ["TWITTER_API_KEY"]
 API_SECRET = environ["TWITTER_API_SECRET"]
 ACCESS_TOKEN = environ["TWITTER_ACCESS_KEY"]
 ACCESS_SECRET = environ["TWITTER_ACCESS_SECRET"]
+
+def emotion(tweet):
+    stuff = te.get_emotion(tweet.text)
+    max_emotion = None
+    max_score = None
+    for emotion, score in stuff.items():
+        if max_emotion == None or score > max_score:
+            max_emotion, max_score = emotion, score
+    return max_emotion + " tweet"
 
 # Helper functions used for the rating algorithm.
 def is_sigma(tweet):
@@ -72,20 +82,20 @@ def sentiment_rating(tweet):
     return avg_polarity, avg_subjectivity
 
 
-def correct_your(tweet):
-    """Checks that the tweet uses the correct form you your/you're.
+# def correct_your(tweet):
+#     """Checks that the tweet uses the correct form you your/you're.
 
-    :param tweet: Tweet sent by me.
-    :type tweet: twitter.Status
-    :return: Boolean describing if this tweet uses the correct form of your/you're. Will return
-    True if neither word was used.
-    :rtype: bool
-    """
-    tool = LanguageTool(language="en-US")
-    errors = tool.check(tweet.text)
-    return not any(
-        "YOUR" in match.ruleId or "YOU'RE" in match.ruleId for match in errors
-    )
+#     :param tweet: Tweet sent by me.
+#     :type tweet: twitter.Status
+#     :return: Boolean describing if this tweet uses the correct form of your/you're. Will return
+#     True if neither word was used.
+#     :rtype: bool
+#     """
+#     tool = LanguageTool(language="en-US")
+#     errors = tool.check(tweet.text)
+#     return not any(
+#         "YOUR" in match.ruleId or "YOU'RE" in match.ruleId for match in errors
+#     )
 
 
 # Tweet rating function.
@@ -98,12 +108,13 @@ def rate_tweet(tweet):
     :return: String that gives the rating of the tweet.
     :rtype: str
     """
-    if not correct_your(tweet):  # Just hammer me for using bad grammar.
-        return "one-of-you're-worst tweet"
+    # if not correct_your(tweet):  # Just hammer me for using bad grammar.
+    #     return "one-of-you're-worst tweet"
     if is_sigma(tweet):  # Most importantly, check if this tweet is a SIGMA tweet.
         return "grindset tweet"
     if is_aggressive(tweet):  # Calm the crowd down after my aggression.
         return "needs-bob-ross tweet"
+    return emotion(tweet)
     polarity, subjectivity = sentiment_rating(tweet)
     if polarity == 0:
         # Just return something at random, since I've run out of ideas to look for.
@@ -157,7 +168,7 @@ def main():
                 raw_query="q=(from%3Acoopermeitz)%20-filter%3Areplies"
             )
             print("Found", [t.text for t in results])
-
+            print([emotion(t) for t in results])
             if last_tweet == None:
                 last_tweet = results[0].id
                 # set the most recent tweet to the last tweet then start polling again
