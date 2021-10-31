@@ -31,8 +31,10 @@ def emotion(tweet):
     for emotion, score in stuff.items():
         if max_emotion == None or score > max_score:
             max_emotion, max_score = emotion, score
+    if max_score < 0.7:
+        return None
     return "%s tweet" % (
-        max_emotion if type(max_emotion) == str else "ambiguous"
+        max_emotion.lower() if type(max_emotion) == str else "ambiguous"
     )
 
 # Helper functions used for the rating algorithm.
@@ -116,7 +118,9 @@ def rate_tweet(tweet):
         return "grindset tweet"
     if is_aggressive(tweet):  # Calm the crowd down after my aggression.
         return "needs-bob-ross tweet"
-    return emotion(tweet)
+    emotion_reaction = emotion(tweet)
+    if emotion_reaction != None:
+        return emotion_reaction
     polarity, subjectivity = sentiment_rating(tweet)
     if polarity == 0:
         # Just return something at random, since I've run out of ideas to look for.
