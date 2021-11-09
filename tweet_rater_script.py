@@ -220,10 +220,7 @@ def main():
             if LINUX:
                 syslog.syslog("restarting due to " + str(e))
             print("restarting due to " + str(e))
-            if "rate" in str(e).lower():
-                sleep(15 * 60)
-            else:
-                sleep(60)
+            sleep(15 * 60)
 
 
 if __name__ == "__main__":
