@@ -13,11 +13,10 @@ Then, the script uses those credentials to poll for my tweets every 90 seconds. 
 `rate_tweet()` algorithm on the new tweet(s) and determines a rating. Finally, it uses the credentials (along with my account credentials) to post the rating as a reply.
 
 #### Rating Algorithm
-The rating algorithm follows a hierarchy of function calls until valid rating is found.
-1. Your/You're Test: If I used the wrong form of your/you're, the bot slanders me. Sigmas don't make spelling errors. 
-2. Sigma Test: We gotta know if my tweet was a Sigma Male Grindset tweet. _**"She asked me my favorite position. I said CEO"**_
-3. Aggression Test: If I used all-caps, this test makes sure the bot calms down the timeline. 
-4. Sentiment Test: Lastly, I use a sentiment analysis library to get a polarity value [-1,1] and subjectivity value [0,1]. See the coordinate plane below to see how these values are used. 
+The rating algorithm follows a hierarchy of function calls until valid rating is found.. 
+1. Sigma Test: We gotta know if my tweet was a Sigma Male Grindset tweet. _**"She asked me my favorite position. I said CEO"**_ 
+2. Emotion Test: If a really bad emotion library thinks it had a strong emotion, then it returns that emotion as the rating.
+3. Sentiment Test: Lastly, I use a sentiment analysis library to get a polarity value [-1,1] and subjectivity value [0,1]. See the coordinate plane below to see how these values are used. 
 [Insert photo]
 #### Amazon Web Services
 I run this script continuously on one EC2 instance. Once the API credentials are added as environmental variables, I pull the content or *requirements.txt* and *tweet_rater_script.py* into files on the virtual machine. Finally, I install the dependencies listed in *requirements.txt* using **pip** and start the script on Python 3.
